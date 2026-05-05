@@ -1,0 +1,12 @@
+{
+    "stm32-for-vscode.makePath": false,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/*.synctex.gz": true
+    },
+    "hide-files.files": []
+}
