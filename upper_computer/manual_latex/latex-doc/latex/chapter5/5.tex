@@ -1,0 +1,49 @@
+\section{高级调试}
+
+高级调试区域默认是收起的，点"高级调试"按钮才会展开。\textbf{普通售后调试不建议使用，除非研发明确要求。}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/ui-advanced.png}
+    \caption{高级调试区域（展开状态）。包含 PWM 和速度校准 RPM。}
+    \label{fig:ui-advanced}
+\end{figure}
+
+\subsection{PWM}
+
+PWM（脉宽调制）是底层速度控制值。它和界面上的"速度"是同一回事的两种表达方式：
+
+\begin{itemize}
+    \item "速度"更直观，售后日常用这个。
+    \item "PWM"更底层，数值范围和物理含义不那么直观。
+\end{itemize}
+
+\textbf{注意：本固件里 PWM 数值越大，速度越慢；PWM 数值越小，速度越快。}这和直觉相反，容易搞混，所以售后优先调"速度"，不要直接调 PWM。
+
+\begin{itemize}
+    \item \textbf{默认值：}\texttt{150}
+    \item \textbf{可调范围：}\texttt{0 \textasciitilde{} 500}
+\end{itemize}
+
+\begin{table}[H]
+    \centering
+    \caption{PWM 按钮说明}
+    \label{tab:pwm-buttons}
+    \begin{tabular}{lp{6cm}}
+        \toprule
+        \textbf{按钮} & \textbf{作用} \\
+        \midrule
+        应用 & 临时设置 PWM，不保存 \\
+        保存 & 保存 PWM，断电后保留 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{速度校准 RPM}
+
+\begin{itemize}
+    \item \textbf{默认值：}\texttt{3655 RPM}
+    \item \textbf{作用：}用于"速度 cm/min"和底层 PWM 之间的换算
+\end{itemize}
+
+一般不要修改。只有研发确认电机型号、轮径、传动结构或测速基准发生变更后，才需要改这个值。

@@ -1,0 +1,79 @@
+\section{快速上手}
+
+每次到现场，不需要从头到尾读完整本手册。跟着下面四步走，五分钟就能完成一次完整的调试。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/ui-overview.png}
+    \caption{上位机界面概览。左侧为参数调节区，右侧为通信日志区。}
+    \label{fig:ui-overview}
+\end{figure}
+
+\subsection{连接设备}
+
+\begin{enumerate}[label={(\arabic*)}]
+    \item 给控制板上电，用串口线把控制板和电脑连好。
+    \item 打开上位机程序，在左上方的"串口"下拉框里选对应的 COM 口。如果列表是空的，点一下旁边的"刷新"。
+    \item 波特率保持默认的 \texttt{115200}，一般不需要改。
+    \item 点"连接"。连接成功后，右上角状态会变成"已连接 COMx"，同时显示当前设备模式。
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/ui-connection.png}
+    \caption{连接区域。选择串口、设置波特率、点击连接。}
+    \label{fig:ui-connection}
+\end{figure}
+
+如果连不上，见附录 B.2"连接失败"。
+
+\subsection{读取参数}
+
+连接成功后，第一步永远是点"读取参数"。
+
+这个按钮会把设备里当前保存的参数全部读到界面上。只有先读取，你看到的数值才是设备里真实存的值，而不是界面上的默认值。
+
+读取完成后，界面会弹出"读取完成"的提示。
+
+\subsection{单次运行测试}
+
+参数读上来之后，点"单次运行测试"。
+
+设备会按当前参数执行一次完整的送料动作。重点观察传送带和前后工序的\textbf{时序配合}：
+
+\begin{itemize}
+    \item 动了吗？
+    \item 开始得早还是晚？（和前工序衔接是否合适）
+    \item 送料完成及时吗？（会不会拖慢整体节拍）
+    \item 启动瞬间冲不冲？
+    \item 速度合适吗？
+\end{itemize}
+
+把观察到的问题记下来，下一步就是针对性调参。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/ui-quick-actions.png}
+    \caption{常用动作区域。读取参数、单次运行测试、读取启动信号。}
+    \label{fig:ui-quick-actions}
+\end{figure}
+
+\subsection{调参与保存}
+
+根据刚才观察到的问题，改对应的参数。改完后，再点一次"单次运行测试"确认效果。
+
+效果合适了，点对应参数的"保存"按钮。保存成功后界面会弹出"保存成功"，约 1 秒后自动消失。
+
+\textbf{一个原则：一次只改一个参数。}改完测完，再改下一个。如果一次改好几个，出了问题不知道是谁引起的。
+
+\textbf{另一个原则：调参阶段先用"应用"试，确认了再"保存"。}速度和 PWM 这两个参数有"应用"按钮。点"应用"后参数临时生效，断电后不保留。试好了再点"保存"，才真正写进设备。
+
+\begin{quote}
+\textbf{注意"应用"的两点限制：}
+\begin{enumerate}[label={\arabic*.}]
+    \item "应用"只能在设备空闲（IDLE）时使用。如果设备正在运行（RUNNING），点"应用"会报错拒绝。
+    \item 点"应用"后，设备会自动进入 SERVICE 模式。这是正常的临时调试状态，不需要手动切换。
+\end{enumerate}
+\end{quote}
+
+保存完，建议最后再点一次"读取参数"，确认界面上显示的就是你刚保存的值。

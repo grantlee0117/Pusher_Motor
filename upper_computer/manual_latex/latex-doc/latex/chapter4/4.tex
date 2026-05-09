@@ -1,0 +1,50 @@
+\section{扩展功能}
+
+\subsection{方向参数}
+
+方向参数控制电机转动方向的引脚电平。
+
+\begin{table}[H]
+    \centering
+    \caption{方向参数默认值}
+    \label{tab:direction-default}
+    \begin{tabular}{lc}
+        \toprule
+        \textbf{参数} & \textbf{默认值} \\
+        \midrule
+        电机 A & 1 \\
+        电机 B & 0 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{一般情况下不要修改方向参数。}只有在现场发现电机实际转动方向和预期相反时，才考虑调整。通常是接线或机械安装的问题，优先排查硬件；确认需要改方向时，在下拉框选 \texttt{0} 或 \texttt{1}，然后点"保存A"或"保存B"。
+
+保存后写入设备，断电保留。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/ui-direction.png}
+    \caption{方向参数区域。电机 A 和电机 B 的方向设置与保存按钮。}
+    \label{fig:ui-direction}
+\end{figure}
+
+\subsection{启动信号读取}
+
+点击"读取启动信号"，可以查看外部启动输入脚当前的电平状态。
+
+\begin{table}[H]
+    \centering
+    \caption{启动信号状态说明}
+    \label{tab:signal-status}
+    \begin{tabular}{lp{8cm}}
+        \toprule
+        \textbf{显示} & \textbf{含义} \\
+        \midrule
+        HIGH & 外部启动输入为高电平，设备可被外部信号触发 \\
+        LOW & 外部启动输入为低电平，没有检测到外部启动输入 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+如果外部启动没有反应，可以用这个按钮排查：先点一次，记下显示的状态；然后触发外部启动源，再点一次，对比两次结果。如果两次都是 LOW，说明信号没有送到控制板，检查外部信号线。如果第二次变成了 HIGH，但设备仍不运行，反馈研发排查固件状态和电机驱动。

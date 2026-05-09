@@ -1,0 +1,115 @@
+\section{现场速查}
+
+这一章不追求从头到尾读，而是放在手边，遇到问题直接翻到对应条目。
+
+\subsection{现象$\rightarrow$参数对照表}
+
+\begin{table}[H]
+    \centering
+    \caption{现场现象与参数调节对照}
+    \label{tab:symptom-param}
+    \begin{tabular}{p{5.5cm}lp{3cm}}
+        \toprule
+        \textbf{现场现象} & \textbf{优先调整的参数} & \textbf{调节方向} \\
+        \midrule
+        传送带启动太早，和前工序冲突 & 等待时间 & 增大 \\
+        传送带启动太晚，前后工序有空档 & 等待时间 & 减小 \\
+        纸盒没送到指定位置 & 运行时间 & 增大 \\
+        运行时间太长，影响下一周期 & 运行时间 & 减小 \\
+        整体节拍太慢，前工序等不及 & 速度 & 增大 \\
+        送料过快/不稳 & 速度 & 减小 \\
+        启动瞬间冲击明显（振动/噪音大） & 加速度 & 减小 \\
+        启动太慢、拖太久 & 加速度 & 增大 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{原则：一次只改一个参数，改完先做"单次运行测试"确认效果，再改下一个。}
+
+\subsection{设备状态说明}
+
+界面右上角显示当前设备模式，不同模式的含义和处理方式：
+
+\begin{table}[H]
+    \centering
+    \caption{设备状态说明}
+    \label{tab:device-status}
+    \begin{tabular}{lp{4.5cm}p{5cm}}
+        \toprule
+        \textbf{显示} & \textbf{含义} & \textbf{售后处理方式} \\
+        \midrule
+        IDLE & 空闲，可以调参和测试 & 正常操作 \\
+        RUNNING & 电机正在执行动作 & 等动作结束后再操作 \\
+        SERVICE & 售后临时调试状态 & 正常，程序会自动进入或退出 \\
+        ERROR & 异常状态 & 断电重启后重新连接；仍异常则反馈研发 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+售后不需要手动切换模式。点"应用"速度或 PWM 时，程序会自动进入 SERVICE 模式；保存参数后会自动回到 IDLE。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/ui-status.png}
+    \caption{界面顶部状态栏。显示连接状态和当前设备模式。}
+    \label{fig:ui-status}
+\end{figure}
+
+\subsection{应用 vs 保存}
+
+\begin{table}[H]
+    \centering
+    \caption{操作功能对比}
+    \label{tab:action-compare}
+    \begin{tabular}{lp{4cm}cc}
+        \toprule
+        \textbf{操作} & \textbf{作用} & \textbf{是否写入设备} & \textbf{断电后是否保留} \\
+        \midrule
+        保存 & 把参数写进设备 & 是 & 是 \\
+        应用（仅限速度、PWM） & 临时生效试一下 & 否 & 否 \\
+        读取参数 & 从设备读当前值到界面 & 否 & — \\
+        单次运行测试 & 触发一次动作 & 否 & — \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+简单记法：
+\begin{itemize}
+    \item 点"保存"的参数，会写入设备，断电后保留。
+    \item 点"应用"的速度或 PWM，主要用于临时测试。只能在 IDLE 状态下使用，会自动进入 SERVICE 模式。
+    \item "读取参数"只读取，不修改设备。
+    \item "单次运行测试"只触发一次动作，不修改参数。
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figures/ui-toast.png}
+    \caption{保存成功后的提示弹窗，约 1 秒后自动消失。}
+    \label{fig:ui-toast}
+\end{figure}
+
+\subsection{恢复工程默认值}
+
+如果现场参数被调乱，可以按下面值手动恢复：
+
+\begin{table}[H]
+    \centering
+    \caption{参数恢复默认值}
+    \label{tab:default-values}
+    \begin{tabular}{lc}
+        \toprule
+        \textbf{参数} & \textbf{恢复值} \\
+        \midrule
+        等待时间 & 250 ms \\
+        运行时间 & 250 ms \\
+        加速度 & 100 \\
+        速度 & 48226 cm/min \\
+        电机 A & 1 \\
+        电机 B & 0 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+恢复方法：在对应输入框填入上表数值，分别点击对应参数的"保存"按钮。
+
+如果高级调试里的 PWM 被改乱，可把 PWM 改回 \texttt{150} 并点击"保存"。

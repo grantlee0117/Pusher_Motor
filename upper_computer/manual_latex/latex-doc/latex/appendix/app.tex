@@ -1,0 +1,101 @@
+\appendix
+
+\section{启动程序}
+
+如果是源码方式运行：
+
+\begin{lstlisting}[language=bash, caption={源码启动命令}, label={lst:start-source}]
+py -m pip install -r requirements.txt
+py app.py
+\end{lstlisting}
+
+如果已经打包成 exe，直接双击 \texttt{PusherMotorHost.exe}。
+
+\section{常见问题处理}
+
+\subsection{找不到串口}
+
+\begin{enumerate}[label={(\arabic*)}]
+    \item 检查串口线是否插好。
+    \item 检查控制板是否上电。
+    \item 点击"刷新"。
+    \item 打开 Windows 设备管理器，确认是否出现 COM 口。
+    \item 如果没有 COM 口，检查 USB 转串口驱动。
+\end{enumerate}
+
+\subsection{连接失败}
+
+\begin{enumerate}[label={(\arabic*)}]
+    \item 确认没有其他串口工具占用该 COM 口。
+    \item 确认波特率是 \texttt{115200}。
+    \item 断开后重新连接。
+    \item 控制板断电重启后再试。
+\end{enumerate}
+
+\subsection{点击按钮后提示超时}
+
+可能原因：串口线松动、控制板没有上电、COM 口选错、固件版本和上位机不匹配。
+
+处理步骤：
+\begin{enumerate}[label={(\arabic*)}]
+    \item 断开上位机连接。
+    \item 检查接线和上电。
+    \item 重新选择串口并连接。
+    \item 仍无法恢复时，把通信日志截图发给研发。
+\end{enumerate}
+
+\subsection{单次运行测试没有动作}
+
+\begin{enumerate}[label={(\arabic*)}]
+    \item 确认设备已连接。
+    \item 点击"读取参数"，看是否能正常读取。
+    \item 查看顶部模式是否为 \texttt{RUNNING}，如果正在运行，等待结束。
+    \item 检查速度是否被设置得过低（包括是否误设为 \texttt{0}）。
+    \item 检查运行时间是否太短，导致纸盒还没送到位置就停了。
+    \item 检查电机供电、驱动和接线。
+\end{enumerate}
+
+\subsection{外部启动没有反应}
+
+\begin{enumerate}[label={(\arabic*)}]
+    \item 点击"读取启动信号"。
+    \item 触发外部启动源后再读取一次。
+    \item 如果一直是 \texttt{LOW}，检查外部启动信号线。
+    \item 如果能变成 \texttt{HIGH}，但设备仍不运行，反馈研发排查固件状态和电机驱动。
+\end{enumerate}
+
+\section{打包说明}
+
+在 Windows 环境中，进入 \texttt{upper\_computer} 目录，双击：
+
+\begin{lstlisting}[language=bash, caption={打包命令}, label={lst:build}]
+build_windows.bat
+\end{lstlisting}
+
+默认会打包成单文件 exe，程序在：
+
+\begin{lstlisting}[language=bash, caption={打包输出路径}, label={lst:dist-path}]
+dist\PusherMotorHost.exe
+\end{lstlisting}
+
+把这个 \texttt{PusherMotorHost.exe} 发给同事即可，对方不需要安装 Python 或依赖库。
+
+\textbf{注意：}不要把 \texttt{dist\textbackslash{}PusherMotorHost\textbackslash{}} 文件夹里的单独 exe 拿出来发给别人。文件夹模式必须发送整个文件夹，否则对方容易出现"加载 Python DLL 失败"。
+
+打包前建议先运行一次源码版本，确认串口连接和按钮功能正常。
+
+\section{给研发排查用的信息}
+
+售后遇到问题时，建议提供以下信息给研发：
+
+\begin{itemize}
+    \item 设备编号或现场信息
+    \item 使用的上位机版本或文件日期
+    \item 控制板固件版本或烧录日期
+    \item Windows 设备管理器里的 COM 口截图
+    \item 上位机右侧"通信日志"截图
+    \item 当前参数截图
+    \item 问题发生前点过哪些按钮
+\end{itemize}
+
+正常售后使用不需要阅读底层串口命令。如需查命令细节，可参考项目根目录的 \texttt{串口调试命令.md}。
