@@ -28,7 +28,7 @@ class PusherMotorSerial:
     def __init__(self) -> None:
         self._serial: Optional[serial.Serial] = None
         self._lock = threading.Lock()
-        self._ready_probe = "get mode"
+        self._ready_probe = "get start_signal"
 
     @staticmethod
     def list_ports() -> List[SerialPortInfo]:

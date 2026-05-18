@@ -24,9 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "pusher_motor.h"
-#include "cli.h"
-#include "system_mode.h"
+#include "app_init.h"
 
 /* USER CODE END Includes */
 
@@ -94,17 +92,7 @@ int main(void)
   MX_TIM4_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  // 初始化系统模式
-  system_mode_init();
-
-  // 尽早初始化CLI，避免刚上电或刚烧录后过早发送的串口数据丢失
-  cli_init(&huart1);
-
-  // 初始化推料电机
-  pusher_motor_init();
-
-  // 应用初始化完成，进入空闲模式
-  system_mode_set(SYSTEM_MODE_IDLE);
+  app_system_init(&huart1);
   
   /* USER CODE END 2 */
 
@@ -113,10 +101,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    // 处理CLI输入
-    cli_process();
-    // 处理推料电机
-    pusher_motor_loop();
+    app_system_loop();
 
 
     /* USER CODE BEGIN 3 */
@@ -145,23 +130,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    /*
-     * If the external crystal is slow or fails to start after programming,
-     * keep the board controllable by falling back to the internal HSI clock.
-     * The fallback runs at 64 MHz, so PWM frequency changes slightly, but UART
-     * baud calculation remains valid because USART is initialized afterwards.
-     */
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-    RCC_OscInitStruct.HSEState = RCC_HSE_OFF;
-    RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
-    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
+    Error_Handler();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks

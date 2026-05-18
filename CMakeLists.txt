@@ -44,12 +44,20 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
+    App/System/app_init.c
+    App/Control/pusher_motor.c
+    App/Communication/cli.c
+    App/Storage/flash_storage.c
+    App/Config/params_manager.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined include paths
+    App/System
+    App/Control
+    App/Communication
+    App/Storage
+    App/Config
 )
 
 # Add project symbols (macros)
@@ -65,4 +73,11 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
 
     # Add user defined libraries
+)
+
+# Generate HEX and BIN files after building the ELF
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.hex
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.bin
+    COMMENT "Generating HEX and BIN files"
 )

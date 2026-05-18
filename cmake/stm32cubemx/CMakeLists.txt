@@ -27,12 +27,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stm32f1xx_hal_msp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/sysmem.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/syscalls.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/pusher_motor.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/cli.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/system_mode.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/flash_storage.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/params_manager.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../startup_stm32f103xb.s
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Startup/startup_stm32f103xb.s
 )
 
 # STM32 HAL/LL Drivers

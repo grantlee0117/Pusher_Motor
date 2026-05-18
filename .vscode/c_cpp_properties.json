@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "STM32",
+            "includePath": [
+                "${workspaceFolder}/Core/Inc",
+                "${workspaceFolder}/App/System",
+                "${workspaceFolder}/App/Control",
+                "${workspaceFolder}/App/Communication",
+                "${workspaceFolder}/App/Storage",
+                "${workspaceFolder}/App/Config",
+                "${workspaceFolder}/Drivers/STM32F1xx_HAL_Driver/Inc",
+                "${workspaceFolder}/Drivers/STM32F1xx_HAL_Driver/Inc/Legacy",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F1xx/Include",
+                "${workspaceFolder}/Drivers/CMSIS/Include"
+            ],
+            "defines": [
+                "USE_HAL_DRIVER",
+                "STM32F103xB",
+                "DEBUG"
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm",
+            "compileCommands": "${workspaceFolder}/build/Debug/compile_commands.json"
+        }
+    ],
+    "version": 4
+}

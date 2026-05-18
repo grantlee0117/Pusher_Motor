@@ -9,8 +9,7 @@ from pusher_motor_serial import PusherMotorSerial, SerialCommandError, SerialPor
 
 APP_TITLE = "Pusher Motor 售后调试上位机"
 DEFAULT_BAUDRATE = 115200
-ACCELERATION_MAX = 100
-ACCEL_TIME_MAX_MS = 10000
+ACCELERATION_MAX = 50
 DIRECTION_TIME_MAX_MS = 60000
 WAIT_TIME_MAX_MS = 10000
 SPEED_MAX_CM_MIN = 70000
@@ -234,7 +233,7 @@ class PusherMotorApp(tk.Tk):
 
         self.direction_time_var = tk.StringVar(value=str(DEFAULT_DIRECTION_TIME_MS))
         self.wait_time_var = tk.StringVar(value=str(DEFAULT_WAIT_TIME_MS))
-        self.acceleration_var = tk.StringVar(value="100")
+        self.acceleration_var = tk.StringVar(value="0")
         self.speed_var = tk.StringVar(value=str(DEFAULT_SPEED_CM_MIN))
         self.pwm_duty_var = tk.StringVar(value=str(DEFAULT_PWM_DUTY))
         self.max_speed_var = tk.StringVar(value=str(DEFAULT_MAX_SPEED_RPM))
@@ -515,13 +514,13 @@ class PusherMotorApp(tk.Tk):
         self._add_slider_param_row(
             frame,
             3,
-            "加速度 0-100",
+            "加速度 0-50",
             self.acceleration_var,
             0,
             ACCELERATION_MAX,
             "保存",
             self.save_acceleration,
-            "工程默认值：100（对应固件加速时间 0 ms）",
+            "工程默认值：0（0=关闭加速，1-50=每10ms步长）",
         )
 
     def _build_direction(self, parent: ttk.Frame) -> None:
@@ -722,32 +721,23 @@ class PusherMotorApp(tk.Tk):
 
         def work() -> Dict[str, object]:
             values: Dict[str, object] = {name: self.client.get_value(command) for name, _var, command in commands}
-            values["accel_time"] = self.client.get_value("get accel_time")
-            values["mode"] = self.client.send_command("get mode")
+            values["acceleration"] = self.client.get_value("get acceleration")
             return values
 
         def done(values: Dict[str, object]) -> None:
             for name, var, _command in commands:
                 var.set(str(values[name]))
-            self.acceleration_var.set(str(self._accel_time_to_level(int(values["accel_time"]))))
-            self._update_mode_from_response(str(values["mode"]))
+            self.acceleration_var.set(str(values["acceleration"]))
             self._log("参数读取完成")
 
         self._run_serial_task("读取参数", work, done)
 
     def start_motor(self) -> None:
         def work() -> str:
-            responses = []
-            if self._current_mode_worker() == "SERVICE":
-                responses.append(self._send_checked_worker("set mode idle"))
-            responses.append(self._send_checked_worker("start"))
-            responses.append(self.client.send_command("get mode"))
-            return "\n".join(response for response in responses if response)
+            return self._send_checked_worker("start")
 
         def done(response: str) -> None:
             self._log(response)
-            self._update_mode_from_response(response)
-            self.after(800, self.read_mode)
 
         self._run_serial_task("单次运行测试", work, done)
 
@@ -766,15 +756,6 @@ class PusherMotorApp(tk.Tk):
 
         self._run_serial_task("读取启动信号", work, done)
 
-    def read_mode(self) -> None:
-        def work() -> str:
-            return self.client.send_command("get mode")
-
-        def done(response: str) -> None:
-            self._update_mode_from_response(response)
-
-        self._run_serial_task("读取模式", work, done)
-
     def apply_speed(self) -> None:
         speed = self._read_int(self.speed_var, 0, None)
         if speed is None:
@@ -783,14 +764,10 @@ class PusherMotorApp(tk.Tk):
         def work() -> str:
             max_speed = self._read_max_speed_worker()
             duty = self._calculate_duty_from_speed(speed, max_speed)
-            responses = self._ensure_service_mode_worker()
-            responses.append(self._send_checked_worker(f"set new_pwm_duty {duty}"))
-            responses.append(self.client.send_command("get mode"))
-            return "\n".join(response for response in responses if response)
+            return self._send_checked_worker(f"set new_pwm_duty {duty}")
 
         def done(response: str) -> None:
             self._log(response)
-            self._update_mode_from_response(response)
 
         self._run_serial_task("应用速度", work, done)
 
@@ -804,8 +781,7 @@ class PusherMotorApp(tk.Tk):
         level = self._read_int(self.acceleration_var, 0, ACCELERATION_MAX)
         if level is None:
             return
-        accel_time = self._accel_level_to_time(level)
-        self._save_command(f"set accel_time {accel_time}")
+        self._save_command(f"set acceleration {level}")
 
     def apply_pwm(self) -> None:
         duty = self._read_int(self.pwm_duty_var, 0, 500)
@@ -813,14 +789,10 @@ class PusherMotorApp(tk.Tk):
             return
 
         def work() -> str:
-            responses = self._ensure_service_mode_worker()
-            responses.append(self._send_checked_worker(f"set new_pwm_duty {duty}"))
-            responses.append(self.client.send_command("get mode"))
-            return "\n".join(response for response in responses if response)
+            return self._send_checked_worker(f"set new_pwm_duty {duty}")
 
         def done(response: str) -> None:
             self._log(response)
-            self._update_mode_from_response(response)
 
         self._run_serial_task("应用PWM", work, done)
 
@@ -838,15 +810,10 @@ class PusherMotorApp(tk.Tk):
 
     def _save_command(self, command: str) -> None:
         def work() -> str:
-            responses = [self._send_checked_worker(command)]
-            if self._current_mode_worker() == "SERVICE":
-                responses.append(self._send_checked_worker("set mode idle"))
-            responses.append(self.client.send_command("get mode"))
-            return "\n".join(response for response in responses if response)
+            return self._send_checked_worker(command)
 
         def done(response: str) -> None:
             self._log(response)
-            self._update_mode_from_response(response)
             self._show_toast("保存成功")
 
         self._run_serial_task("保存参数", work, done)
@@ -917,20 +884,6 @@ class PusherMotorApp(tk.Tk):
             callback()
         self.after(80, self._process_events)
 
-    def _ensure_service_mode_worker(self) -> list[str]:
-        responses = []
-        mode = self._current_mode_worker()
-        if mode == "SERVICE":
-            return responses
-        if mode == "RUNNING":
-            raise SerialCommandError("设备正在运行，不能执行临时调试")
-        responses.append(self._send_checked_worker("set mode service"))
-        return responses
-
-    def _current_mode_worker(self) -> str:
-        response = self.client.send_command("get mode")
-        return self._extract_mode(response)
-
     def _send_checked_worker(self, command: str) -> str:
         response = self.client.send_command(command)
         self._raise_on_device_error(response)
@@ -956,36 +909,11 @@ class PusherMotorApp(tk.Tk):
         return max(0, min(500, duty))
 
     @staticmethod
-    def _accel_level_to_time(level: int) -> int:
-        level = max(0, min(ACCELERATION_MAX, level))
-        return (ACCELERATION_MAX - level) * (ACCEL_TIME_MAX_MS // ACCELERATION_MAX)
-
-    @staticmethod
-    def _accel_time_to_level(accel_time_ms: int) -> int:
-        accel_time_ms = max(0, min(ACCEL_TIME_MAX_MS, accel_time_ms))
-        step = ACCEL_TIME_MAX_MS // ACCELERATION_MAX
-        return ACCELERATION_MAX - int(round(float(accel_time_ms) / float(step)))
-
-    @staticmethod
-    def _extract_mode(response: str) -> str:
-        text = response.strip()
-        if ":" in text:
-            text = text.rsplit(":", 1)[-1].strip()
-        if not text:
-            return "-"
-        return text.splitlines()[-1].strip()
-
-    @staticmethod
     def _raise_on_device_error(response: str) -> None:
         for raw_line in response.splitlines():
             line = raw_line.strip()
             if line.startswith("Error:") or line.startswith("Unknown command"):
                 raise SerialCommandError(line)
-
-    def _update_mode_from_response(self, response: str) -> None:
-        mode = self._extract_mode(response)
-        if mode:
-            self.mode_var.set(mode)
 
     def _show_toast(self, message: str) -> None:
         toast = tk.Toplevel(self)
