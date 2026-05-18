@@ -85,6 +85,14 @@ static int tx_buf_read(uint8_t *data)
 }
 
 /**
+ * @brief 检查发送缓冲区是否有数据
+ */
+static int tx_buf_available(void)
+{
+    return (tx_head >= tx_tail) ? (tx_head - tx_tail) : (TX_BUF_SIZE - tx_tail + tx_head);
+}
+
+/**
  * @brief 发送单个字符（非阻塞，放入发送缓冲区）
  */
 static void cli_putchar(uint8_t c)
