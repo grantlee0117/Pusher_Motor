@@ -11,7 +11,7 @@
 
 | 工具 | 用途 |
 |------|------|
-| `arm-none-eabi-gcc` | STM32F103 固件交叉编译器 |
+| `arm-none-eabi-gcc` | STM32 固件交叉编译器 |
 | `arm-none-eabi-g++` | 链接器由工具链文件引用 |
 | `arm-none-eabi-objcopy` | 构建后生成 `.hex` 和 `.bin` |
 | `cmake` | 配置和驱动构建流程 |
