@@ -9,14 +9,21 @@
 
 # Local editor state
 /.vscode/*.log
+*.log
+.DS_Store
+Thumbs.db
 
 # Python cache
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.venv/
+venv/
 
 # Packaged desktop output
 /upper_computer/build/
 /upper_computer/dist/
+/upper_computer/.venv/
 
 # Firmware artifacts
 *.elf
