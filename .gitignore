@@ -1,0 +1,39 @@
+# Local agent/session metadata
+.agents/
+.codex/
+.nn/
+
+# CMake and toolchain build outputs
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+/cmake_install.cmake
+/compile_commands.json
+cmake/stm32cubemx/CMakeFiles/
+cmake/stm32cubemx/Makefile
+cmake/stm32cubemx/cmake_install.cmake
+*.elf
+*.map
+*.o
+*.obj
+*.d
+*.a
+
+# Python cache and package outputs
+__pycache__/
+*.py[cod]
+upper_computer/build/
+upper_computer/dist/
+upper_computer/__pycache__/
+
+# Keep the current release firmware artifact, but ignore ad-hoc build products elsewhere.
+*.hex
+*.bin
+!firmware_output/Pusher_Motor.hex
+!firmware_output/Pusher_Motor.bin
+
+# Editor and OS noise
+.vscode/
+.DS_Store
+Thumbs.db
