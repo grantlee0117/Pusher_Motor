@@ -22,8 +22,8 @@
 
 // 默认参数值
 #define DEFAULT_DIRECTION_TIME_MS 250 // 默认运行时间，单位：毫秒
-#define DEFAULT_PWM_DUTY 150          // 默认PWM占空比，500最大
-#define DEFAULT_PWM_DUTY_MAX 500      // PWM最大占空比
+#define DEFAULT_PWM_DUTY 30           // 默认PWM占空比，100最大
+#define DEFAULT_PWM_DUTY_MAX 100      // PWM最大占空比
 #define DEFAULT_WAIT_TIME_MS 250      // 默认等待时间，单位：毫秒
 #define DEFAULT_MAX_SPEED_RPM 3655    // 默认最高转速，单位：RPM
 #define DEFAULT_MOTOR_MP_A_DIR 1      // 默认电机A方向（低电平）
@@ -87,7 +87,7 @@ uint32_t params_manager_get_direction_time(void)
 
 /**
  * @brief 设置PWM占空比
- * @param duty PWM占空比（0-500）
+ * @param duty PWM占空比（0-100）
  * @return 0: 成功, 1: 参数无效
  */
 uint32_t params_manager_set_pwm_duty(uint32_t duty)
@@ -103,7 +103,7 @@ uint32_t params_manager_set_pwm_duty(uint32_t duty)
 
 /**
  * @brief 获取PWM占空比
- * @return PWM占空比（0-500）
+ * @return PWM占空比（0-100）
  */
 uint32_t params_manager_get_pwm_duty(void)
 {

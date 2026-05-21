@@ -2,7 +2,7 @@
 
 // 默认参数值
 #define DEFAULT_DIRECTION_TIME_MS 250 // 默认运行时间，单位：毫秒
-#define DEFAULT_PWM_DUTY 250          // 默认PWM占空比，500最大
+#define DEFAULT_PWM_DUTY 50           // 默认PWM占空比，100最大
 
 /**
  * @brief 计算校验和
@@ -190,7 +190,7 @@ uint32_t FlashStorage_IsValid(FlashStorage_t *data)
         return 0; // 方向时间超出范围
     }
 
-    if (data->pwm_duty > 500)
+    if (data->pwm_duty > 100)
     {
         return 0; // PWM 占空比超出范围
     }

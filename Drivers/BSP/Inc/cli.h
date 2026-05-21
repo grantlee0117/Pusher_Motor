@@ -23,6 +23,7 @@ typedef enum {
     CLI_CMD_SET_NEW_PWM_DUTY,   // 直接更改当前占空比（不保存Flash）
     CLI_CMD_SET_ACCELERATION,   // 设置加速度值
     CLI_CMD_GET_ACCELERATION,   // 获取加速度值
+    CLI_CMD_GET_START_SIGNAL,   // 获取启动信号引脚电平
     CLI_CMD_HELP,               // 帮助命令
     CLI_CMD_UNKNOWN             // 未知命令
 } CliCommand_t;
@@ -49,5 +50,16 @@ void cli_init(UART_HandleTypeDef *huart);
 void cli_process(void);
 
 void cli_send_string(const char *str);
+
+/* RX DMA 缓冲区（供 IDLE 中断使用） */
+#define RX_DMA_BUF_SIZE 256
+extern uint8_t rx_dma_buffer[RX_DMA_BUF_SIZE];
+extern volatile uint16_t rx_dma_len;
+
+/* RX DMA 数据处理（在 USART IDLE 中断中调用） */
+void cli_process_rx_dma(uint8_t *data, uint16_t len);
+
+/* TX DMA 完成处理（在 HAL_UART_TxCpltCallback 中调用） */
+void cli_tx_dma_complete(void);
 
 #endif /* __CLI_H__ */

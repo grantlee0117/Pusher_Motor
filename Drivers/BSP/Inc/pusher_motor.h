@@ -30,7 +30,7 @@ uint32_t pusher_motor_save_params(void);
 /**
  * @brief 根据速度（cm/分钟）计算PWM占空比
  * @param speed_cm_min 速度（cm/分钟）
- * @return PWM占空比（0-500）
+ * @return PWM占空比（0-100）
  */
 uint32_t pusher_motor_calculate_duty_from_speed(uint32_t speed_cm_min);
 
@@ -70,7 +70,7 @@ uint32_t pusher_motor_set_wait_time(uint32_t time_ms);
 
 /**
  * @brief 设置PWM占空比
- * @param duty PWM占空比（0-500）
+ * @param duty PWM占空比（0-100）
  * @return 0: 成功, 1: 参数无效
  */
 uint32_t pusher_motor_set_pwm_duty(uint32_t duty);
@@ -144,5 +144,11 @@ uint32_t pusher_motor_set_acceleration(uint8_t accel);
  * @return 加速度值（0-50）
  */
 uint8_t pusher_motor_get_acceleration(void);
+
+/**
+ * @brief 获取启动信号引脚电平
+ * @return 0: 低电平, 1: 高电平
+ */
+uint8_t pusher_motor_get_start_signal(void);
 
 #endif

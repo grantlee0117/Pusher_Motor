@@ -16,11 +16,11 @@ SPEED_MAX_CM_MIN = 70000
 WHEEL_CIRCUMFERENCE_CM = 3.14159 * 6.0
 DEFAULT_DIRECTION_TIME_MS = 250
 DEFAULT_WAIT_TIME_MS = 250
-DEFAULT_PWM_DUTY = 150
+DEFAULT_PWM_DUTY = 30
 DEFAULT_MAX_SPEED_RPM = 3655
 DEFAULT_MOTOR_A_DIR = 1
 DEFAULT_MOTOR_B_DIR = 0
-DEFAULT_SPEED_CM_MIN = int((1.0 - DEFAULT_PWM_DUTY / 500.0) * DEFAULT_MAX_SPEED_RPM * WHEEL_CIRCUMFERENCE_CM)
+DEFAULT_SPEED_CM_MIN = int((1.0 - DEFAULT_PWM_DUTY / 100.0) * DEFAULT_MAX_SPEED_RPM * WHEEL_CIRCUMFERENCE_CM)
 
 COLOR_PRIMARY = "#0066cc"
 COLOR_PRIMARY_FOCUS = "#1473e6"
@@ -542,8 +542,8 @@ class PusherMotorApp(tk.Tk):
         for col in range(4):
             self.advanced_frame.columnconfigure(col, weight=1)
 
-        self._add_param_row_two_buttons(self.advanced_frame, 0, "PWM 0-500", self.pwm_duty_var, "应用", self.apply_pwm, "保存", self.save_pwm)
-        self._add_note(self.advanced_frame, 1, f"工程默认值：{DEFAULT_PWM_DUTY}（范围 0-500）")
+        self._add_param_row_two_buttons(self.advanced_frame, 0, "PWM 0-100", self.pwm_duty_var, "应用", self.apply_pwm, "保存", self.save_pwm)
+        self._add_note(self.advanced_frame, 1, f"工程默认值：{DEFAULT_PWM_DUTY}（范围 0-100）")
         self._add_param_row(self.advanced_frame, 2, "速度校准 RPM", self.max_speed_var, "保存", lambda: self.save_param("max_speed", self.max_speed_var, 1, 10000))
         self._add_note(self.advanced_frame, 3, f"工程默认值：{DEFAULT_MAX_SPEED_RPM} RPM，用于速度和 PWM 换算")
 
@@ -765,7 +765,7 @@ class PusherMotorApp(tk.Tk):
         self._save_command(f"set acceleration {level}")
 
     def apply_pwm(self) -> None:
-        duty = self._read_int(self.pwm_duty_var, 0, 500)
+        duty = self._read_int(self.pwm_duty_var, 0, 100)
         if duty is None:
             return
 
@@ -778,7 +778,7 @@ class PusherMotorApp(tk.Tk):
         self._run_serial_task("应用PWM", work, done)
 
     def save_pwm(self) -> None:
-        duty = self._read_int(self.pwm_duty_var, 0, 500)
+        duty = self._read_int(self.pwm_duty_var, 0, 100)
         if duty is None:
             return
         self._save_command(f"set pwm_duty {duty}")
@@ -883,11 +883,11 @@ class PusherMotorApp(tk.Tk):
     def _calculate_duty_from_speed(speed_cm_min: int, max_speed_rpm: int) -> int:
         speed_rpm = float(speed_cm_min) / WHEEL_CIRCUMFERENCE_CM
         if speed_rpm <= 0:
-            return 500
+            return 100
         if speed_rpm >= max_speed_rpm:
             return 0
-        duty = int(((float(max_speed_rpm) - speed_rpm) / float(max_speed_rpm)) * 500.0)
-        return max(0, min(500, duty))
+        duty = int(((float(max_speed_rpm) - speed_rpm) / float(max_speed_rpm)) * 100.0)
+        return max(0, min(100, duty))
 
     @staticmethod
     def _raise_on_device_error(response: str) -> None:

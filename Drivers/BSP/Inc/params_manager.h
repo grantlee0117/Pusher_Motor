@@ -27,7 +27,7 @@
  */
 typedef struct {
     uint32_t direction_time_ms;  // 运行时间（毫秒）
-    uint32_t pwm_duty;            // PWM占空比（0-500）
+    uint32_t pwm_duty;            // PWM占空比（0-100）
     uint32_t pwm_duty_max;        // PWM最大占空比
     uint32_t wait_time_ms;         // 等待时间（毫秒）
     uint32_t max_speed_rpm;       // 最高转速（RPM）
@@ -62,14 +62,14 @@ uint32_t params_manager_get_direction_time(void);
 
 /**
  * @brief 设置PWM占空比
- * @param duty PWM占空比（0-500）
+ * @param duty PWM占空比（0-100）
  * @return 0: 成功, 1: 参数无效
  */
 uint32_t params_manager_set_pwm_duty(uint32_t duty);
 
 /**
  * @brief 获取PWM占空比
- * @return PWM占空比（0-500）
+ * @return PWM占空比（0-100）
  */
 uint32_t params_manager_get_pwm_duty(void);
 

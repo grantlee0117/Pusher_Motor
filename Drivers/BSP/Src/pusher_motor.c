@@ -4,10 +4,13 @@
 #include "params_manager.h"
 
 /* 加速相关变量 */
-static uint16_t accel_current_duty = 500; // 当前实际输出的占空比
+static uint16_t accel_current_duty = 100; // 当前实际输出的占空比
 static uint32_t last_accel_tick = 0;      // 上次调整占空比的时间戳
 static uint8_t acc_speed_value = 0;       // 加速度值（0-50），0=无加速
 #define ACCEL_INTERVAL_MS 10              // 每 10ms 调整一次占空比
+
+/* 直接设置的PWM占空比（0xFFFFFFFF 表示未使用） */
+static uint32_t direct_pwm_duty = 0xFFFFFFFF;
 
 // 推料电机状态定义
 typedef enum
@@ -90,10 +93,10 @@ void pusher_motor_loop(void)
             }
             else
             {
-                // 加速模式：从停止状态（500）开始
-                accel_current_duty = 500;
-                E1_Set_Duty(500);
-                E2_Set_Duty(500);
+                // 加速模式：从停止状态（100）开始
+                accel_current_duty = 100;
+                E1_Set_Duty(100);
+                E2_Set_Duty(100);
             }
 
             // 进入运行状态
@@ -137,10 +140,10 @@ void pusher_motor_loop(void)
 
     case MOTOR_STATE_STOP:
         // 电机停止
-        E1_Set_Duty(500);
-        E2_Set_Duty(500);
+        E1_Set_Duty(100);
+        E2_Set_Duty(100);
         // 重置加速占空比
-        accel_current_duty = 500;
+        accel_current_duty = 100;
         // 清除标志
         pusher_motor_work_flag = 0;
         pusher_motor_start_flag = 0;
@@ -162,7 +165,7 @@ uint32_t pusher_motor_save_params(void)
 /**
  * @brief 根据速度（cm/分钟）计算PWM占空比
  * @param speed_cm_min 速度（cm/分钟）
- * @return PWM占空比（0-500）
+ * @return PWM占空比（0-100）
  */
 uint32_t pusher_motor_calculate_duty_from_speed(uint32_t speed_cm_min)
 {
@@ -186,7 +189,7 @@ uint32_t pusher_motor_calculate_duty_from_speed(uint32_t speed_cm_min)
     // 线性计算PWM占空比
     // 占空比 = (最高转速 - 当前转速) / 最高转速 * 最大占空比
     uint32_t duty = (uint32_t)(((float)params_manager_get_max_speed() - speed_rpm) /
-                               (float)params_manager_get_max_speed() * 500.0f);
+                               (float)params_manager_get_max_speed() * 100.0f);
 
     // 确保占空比在有效范围内
     if (duty > PUSHER_MOTOR_MAX_DUTY)
@@ -245,7 +248,7 @@ uint32_t pusher_motor_calculate_speed_from_duty(void)
 
     // 计算当前转速（RPM）
     // 转速 = (1 - 占空比 / 最大占空比) * 最高转速
-    float speed_rpm = (1.0f - (float)params_manager_get_pwm_duty() / 500.0f) *
+    float speed_rpm = (1.0f - (float)params_manager_get_pwm_duty() / 100.0f) *
                       (float)params_manager_get_max_speed();
 
     // 计算速度（cm/分钟）
@@ -293,15 +296,23 @@ uint32_t pusher_motor_set_wait_time(uint32_t time_ms)
 
 /**
  * @brief 设置PWM占空比
- * @param duty PWM占空比（0-500）
+ * @param duty PWM占空比（0-100）
  * @return 0: 成功, 1: 参数无效
  */
 uint32_t pusher_motor_set_pwm_duty(uint32_t duty)
 {
+    if (duty > PUSHER_MOTOR_MAX_DUTY)
+    {
+        return 1; // 参数无效
+    }
+
     if (params_manager_set_pwm_duty(duty) != 0)
     {
         return 1; // 参数无效
     }
+
+    // 清除直接设置，后续 get_pwm_duty 返回 Flash 值
+    direct_pwm_duty = 0xFFFFFFFF;
 
     return params_manager_save();
 }
@@ -317,6 +328,9 @@ uint32_t pusher_motor_set_pwm_duty_direct(uint32_t duty)
     {
         return 1; // 参数无效
     }
+
+    // 记录直接设置的占空比
+    direct_pwm_duty = duty;
 
     // 直接更新PWM占空比
     E1_Set_Duty(duty);
@@ -387,7 +401,18 @@ uint32_t pusher_motor_get_wait_time(void)
  */
 uint32_t pusher_motor_get_pwm_duty(void)
 {
+    if (direct_pwm_duty != 0xFFFFFFFF)
+        return direct_pwm_duty;
     return params_manager_get_pwm_duty();
+}
+
+/**
+ * @brief 获取启动信号引脚电平
+ * @return 0: 低电平, 1: 高电平
+ */
+uint8_t pusher_motor_get_start_signal(void)
+{
+    return (HAL_GPIO_ReadPin(PUSH_START_PORT, PUSH_START_PIN) == GPIO_PIN_SET) ? 1 : 0;
 }
 
 /**

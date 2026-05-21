@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define PUSHER_MOTOR_MAX_DUTY 500
+#define PUSHER_MOTOR_MAX_DUTY 100
 
 #define PUSH_START_PIN PUSH_START_Pin
 #define PUSH_START_PORT PUSH_START_GPIO_Port
