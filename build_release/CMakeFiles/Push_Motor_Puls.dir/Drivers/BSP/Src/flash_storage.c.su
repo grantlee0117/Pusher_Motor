@@ -1,5 +1,0 @@
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/flash_storage.c:54:10:FlashStorage_Read	0	static
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/flash_storage.c:73:10:FlashStorage_Write	40	static
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/flash_storage.c:152:10:FlashStorage_Erase	32	static
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/flash_storage.c:178:10:FlashStorage_IsValid	20	static
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/flash_storage.c:21:10:FlashStorage_Init	40	static

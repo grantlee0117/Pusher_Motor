@@ -1,4 +1,0 @@
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/soft_pwm.c:9:6:soft_pwm_init	0	static
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/soft_pwm.c:14:6:HAL_TIM_PeriodElapsedCallback	0	static
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/soft_pwm.c:46:6:E1_Set_Duty	0	static
-D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/Drivers/BSP/Src/soft_pwm.c:55:6:E2_Set_Duty	0	static

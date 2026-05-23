@@ -5,6 +5,7 @@
 
 # CMake and toolchain build outputs
 /build/
+/build_release/
 /CMakeFiles/
 /CMakeCache.txt
 /Makefile

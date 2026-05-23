@@ -4,10 +4,10 @@
 #include "params_manager.h"
 
 /* 加速相关变量 */
-static uint16_t accel_current_duty = 0;   // 当前实际输出的占空比
-static uint32_t last_accel_tick = 0;      // 上次调整占空比的时间戳
-static uint8_t acc_speed_value = 0;       // 加速度值（0-50），0=无加速
-#define ACCEL_INTERVAL_MS 10              // 每 10ms 调整一次占空比
+static uint16_t accel_current_duty = 0; // 当前实际输出的占空比
+static uint32_t last_accel_tick = 0;    // 上次调整占空比的时间戳
+static uint8_t acc_speed_value = 0;     // 加速度值（0-50），0=无加速
+#define ACCEL_INTERVAL_MS 10            // 每 10ms 调整一次占空比
 
 /* 直接设置的PWM占空比（0xFFFFFFFF 表示未使用） */
 static uint32_t direct_pwm_duty = 0xFFFFFFFF;
@@ -59,8 +59,8 @@ void pusher_motor_init(void)
  * @details 不保存到Flash，直接设置并启动
  */
 void pusher_motor_set_params_and_start(uint32_t direction_time_ms,
-                                        uint32_t wait_time_ms,
-                                        uint32_t pwm_duty)
+                                       uint32_t wait_time_ms,
+                                       uint32_t pwm_duty)
 {
     // 如果电机正在运行，先停止
     if (motor_state != MOTOR_STATE_IDLE)
@@ -171,8 +171,8 @@ void pusher_motor_loop(void)
 
     case MOTOR_STATE_STOP:
         // 电机停止
-        E1_Set_Duty(100);
-        E2_Set_Duty(100);
+        E1_Set_Duty(0);
+        E2_Set_Duty(0);
         // 重置加速占空比
         accel_current_duty = 100;
         // 清除标志
