@@ -4,7 +4,7 @@
 #include "params_manager.h"
 
 /* 加速相关变量 */
-static uint16_t accel_current_duty = 100; // 当前实际输出的占空比
+static uint16_t accel_current_duty = 0;   // 当前实际输出的占空比
 static uint32_t last_accel_tick = 0;      // 上次调整占空比的时间戳
 static uint8_t acc_speed_value = 0;       // 加速度值（0-50），0=无加速
 #define ACCEL_INTERVAL_MS 10              // 每 10ms 调整一次占空比
@@ -38,8 +38,8 @@ void pusher_motor_init(void)
     // 启动软件 PWM（TIM1 中断）
     soft_pwm_init();
 
-    E1_Set_Duty(PUSHER_MOTOR_MAX_DUTY);
-    E2_Set_Duty(PUSHER_MOTOR_MAX_DUTY);
+    E1_Set_Duty(0);
+    E2_Set_Duty(0);
 
     // 根据参数设置方向引脚电平
     HAL_GPIO_WritePin(MOTOR_E1_DIR_PORT, MOTOR_E1_DIR_PIN,
@@ -49,6 +49,37 @@ void pusher_motor_init(void)
 
     // 初始化状态
     motor_state = MOTOR_STATE_IDLE;
+}
+
+/**
+ * @brief 一键设置参数并启动电机
+ * @param direction_time_ms 运行时间（毫秒），范围：1-9999
+ * @param wait_time_ms 等待时间（毫秒），范围：0-9999
+ * @param pwm_duty PWM占空比（速度百分比），范围：5-95
+ * @details 不保存到Flash，直接设置并启动
+ */
+void pusher_motor_set_params_and_start(uint32_t direction_time_ms,
+                                        uint32_t wait_time_ms,
+                                        uint32_t pwm_duty)
+{
+    // 如果电机正在运行，先停止
+    if (motor_state != MOTOR_STATE_IDLE)
+    {
+        E1_Set_Duty(0);
+        E2_Set_Duty(0);
+        accel_current_duty = 0;
+        pusher_motor_work_flag = 0;
+        pusher_motor_start_flag = 0;
+        motor_state = MOTOR_STATE_IDLE;
+    }
+
+    // 设置参数（不保存到Flash，仅修改内存中的参数）
+    params_manager_set_direction_time(direction_time_ms);
+    params_manager_set_wait_time(wait_time_ms);
+    params_manager_set_pwm_duty(pwm_duty);
+
+    // 启动电机
+    pusher_motor_start_flag = 1;
 }
 
 void pusher_motor_start(void)
@@ -93,10 +124,10 @@ void pusher_motor_loop(void)
             }
             else
             {
-                // 加速模式：从停止状态（100）开始
-                accel_current_duty = 100;
-                E1_Set_Duty(100);
-                E2_Set_Duty(100);
+                // 加速模式：从停止状态（0）开始
+                accel_current_duty = 0;
+                E1_Set_Duty(0);
+                E2_Set_Duty(0);
             }
 
             // 进入运行状态
@@ -115,16 +146,16 @@ void pusher_motor_loop(void)
         {
             uint32_t target_duty = params_manager_get_pwm_duty();
 
-            if (accel_current_duty > target_duty)
+            if (accel_current_duty < target_duty)
             {
                 // 每隔 ACCEL_INTERVAL_MS 调整一次，避免变化过快
                 if ((current_time - last_accel_tick) >= ACCEL_INTERVAL_MS)
                 {
                     last_accel_tick = current_time;
 
-                    if (accel_current_duty - target_duty > acc_speed_value)
+                    if (target_duty - accel_current_duty > acc_speed_value)
                     {
-                        accel_current_duty -= acc_speed_value;
+                        accel_current_duty += acc_speed_value;
                     }
                     else
                     {

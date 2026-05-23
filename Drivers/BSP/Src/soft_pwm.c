@@ -49,7 +49,7 @@ void E1_Set_Duty(uint16_t duty)
     {
         duty = PUSHER_MOTOR_MAX_DUTY;
     }
-    e1_pwm_duty = (uint16_t)((uint32_t)(PUSHER_MOTOR_MAX_DUTY - duty) * SOFT_PWM_PERIOD / PUSHER_MOTOR_MAX_DUTY);
+    e1_pwm_duty = (uint16_t)((uint32_t)duty * SOFT_PWM_PERIOD / PUSHER_MOTOR_MAX_DUTY);
 }
 
 void E2_Set_Duty(uint16_t duty)
@@ -58,5 +58,5 @@ void E2_Set_Duty(uint16_t duty)
     {
         duty = PUSHER_MOTOR_MAX_DUTY;
     }
-    e2_pwm_duty = (uint16_t)((uint32_t)(PUSHER_MOTOR_MAX_DUTY - duty) * SOFT_PWM_PERIOD / PUSHER_MOTOR_MAX_DUTY);
+    e2_pwm_duty = (uint16_t)((uint32_t)duty * SOFT_PWM_PERIOD / PUSHER_MOTOR_MAX_DUTY);
 }

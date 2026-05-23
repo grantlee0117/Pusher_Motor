@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/build_release/cmake_install.cmake",
+		"D:/ProgramProjects/CubeMXProject/LongGe/Pusher_Motor/build_release/cmake/stm32cubemx/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

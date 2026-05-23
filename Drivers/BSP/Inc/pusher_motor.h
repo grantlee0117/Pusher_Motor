@@ -10,6 +10,17 @@
 void pusher_motor_init(void);
 
 /**
+ * @brief 一键设置参数并启动电机
+ * @param direction_time_ms 运行时间（毫秒），范围：1-9999
+ * @param wait_time_ms 等待时间（毫秒），范围：0-9999
+ * @param pwm_duty PWM占空比（速度百分比），范围：5-95
+ * @details 不保存到Flash，直接设置并启动
+ */
+void pusher_motor_set_params_and_start(uint32_t direction_time_ms,
+                                        uint32_t wait_time_ms,
+                                        uint32_t pwm_duty);
+
+/**
  * @brief 推料电机启动函数
  * @details 开始推料操作
  */
