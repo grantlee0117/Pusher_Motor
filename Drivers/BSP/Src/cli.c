@@ -120,17 +120,19 @@ static void trim_string(char *str)
 }
 
 /**
- * @brief 解析 device motor push=time,wait,duty 命令
+ * @brief 解析 device motor push=time,wait,duty,accel 命令
  * @param cmd_str 输入命令字符串
  * @param direction_time_ms 输出：运行时间（ms）
  * @param wait_time_ms 输出：等待时间（ms）
  * @param pwm_duty 输出：PWM占空比（5-95）
+ * @param acceleration 输出：加速度步长（0-50），0=无加速
  * @return 0: 解析成功, -1: 解析失败
  */
 static int parse_device_motor_push(char *cmd_str,
                                     uint32_t *direction_time_ms,
                                     uint32_t *wait_time_ms,
-                                    uint32_t *pwm_duty)
+                                    uint32_t *pwm_duty,
+                                    uint32_t *acceleration)
 {
     trim_string(cmd_str);
 
@@ -153,7 +155,7 @@ static int parse_device_motor_push(char *cmd_str,
         return -1;
     }
 
-    /* 解析三个参数：time,wait,duty */
+    /* 解析四个参数：time,wait,duty,accel */
     char *token;
     char *saveptr;
 
@@ -175,12 +177,25 @@ static int parse_device_motor_push(char *cmd_str,
         return -1;
     *pwm_duty = (uint32_t)atoi(token);
 
+    /* 第四个参数：加速度步长（可选，默认0） */
+    token = strtok_r(NULL, ",", &saveptr);
+    if (token == NULL)
+    {
+        *acceleration = 0;
+    }
+    else
+    {
+        *acceleration = (uint32_t)atoi(token);
+    }
+
     /* 参数范围校验 */
     if (*direction_time_ms < 1 || *direction_time_ms > 9999)
         return -1;
     if (*wait_time_ms > 9999)
         return -1;
     if (*pwm_duty < 5 || *pwm_duty > 100)
+        return -1;
+    if (*acceleration > 50)
         return -1;
 
     /* 占空比上限限制：大于95强制设为95 */
@@ -198,11 +213,14 @@ static int parse_device_motor_push(char *cmd_str,
 static void cli_execute_command(CliCommand_t cmd,
                                  uint32_t direction_time_ms,
                                  uint32_t wait_time_ms,
-                                 uint32_t pwm_duty)
+                                 uint32_t pwm_duty,
+                                 uint32_t acceleration)
 {
     switch (cmd)
     {
     case CLI_CMD_DEVICE_MOTOR_PUSH:
+        /* 设置加速度 */
+        pusher_motor_set_acceleration((uint8_t)acceleration);
         /* 设置参数并启动电机 */
         pusher_motor_set_params_and_start(direction_time_ms, wait_time_ms, pwm_duty);
         break;
@@ -289,15 +307,16 @@ void cli_process(void)
             uint32_t direction_time_ms = 0;
             uint32_t wait_time_ms = 0;
             uint32_t pwm_duty = 0;
+            uint32_t acceleration = 0;
 
             char cmd_str[RX_BUF_SIZE];
             strncpy(cmd_str, (char *)cmd_buf, sizeof(cmd_str) - 1);
             cmd_str[sizeof(cmd_str) - 1] = '\0';
 
-            if (parse_device_motor_push(cmd_str, &direction_time_ms, &wait_time_ms, &pwm_duty) == 0)
+            if (parse_device_motor_push(cmd_str, &direction_time_ms, &wait_time_ms, &pwm_duty, &acceleration) == 0)
             {
                 cli_execute_command(CLI_CMD_DEVICE_MOTOR_PUSH,
-                                    direction_time_ms, wait_time_ms, pwm_duty);
+                                    direction_time_ms, wait_time_ms, pwm_duty, acceleration);
             }
             else
             {
