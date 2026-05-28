@@ -27,6 +27,14 @@ static volatile uint16_t rx_tail = 0;
 static uint8_t cmd_buf[RX_BUF_SIZE];
 static uint16_t cmd_len = 0;
 
+// 二进制 HEX 帧：AA a b c d 55
+#define BINARY_PUSH_FRAME_HEAD 0xAAU
+#define BINARY_PUSH_FRAME_TAIL 0x55U
+#define BINARY_PUSH_FRAME_SIZE 6U
+
+static uint8_t binary_push_frame[BINARY_PUSH_FRAME_SIZE];
+static uint8_t binary_push_frame_len = 0;
+
 /**
  * @brief 将字符写入接收环形缓冲区（中断安全）
  */
@@ -163,13 +171,13 @@ static int parse_device_motor_push(char *cmd_str,
     token = strtok_r(params, ",", &saveptr);
     if (token == NULL)
         return -1;
-    *direction_time_ms = (uint32_t)atoi(token);
+    uint32_t direction_time_input = (uint32_t)atoi(token);
 
     /* 第二个参数：等待时间 */
     token = strtok_r(NULL, ",", &saveptr);
     if (token == NULL)
         return -1;
-    *wait_time_ms = (uint32_t)atoi(token);
+    uint32_t wait_time_input = (uint32_t)atoi(token);
 
     /* 第三个参数：PWM占空比（速度百分比） */
     token = strtok_r(NULL, ",", &saveptr);
@@ -189,16 +197,56 @@ static int parse_device_motor_push(char *cmd_str,
     }
 
     /* 参数范围校验 */
-    if (*direction_time_ms < 1 || *direction_time_ms > 9999)
+    if (direction_time_input < 1 || direction_time_input > 99)
         return -1;
-    if (*wait_time_ms > 9999)
+    if (wait_time_input > 99)
         return -1;
     if (*pwm_duty < 5 || *pwm_duty > 100)
         return -1;
     if (*acceleration > 50)
         return -1;
 
+    *direction_time_ms = direction_time_input * 100U;
+    *wait_time_ms = wait_time_input * 100U;
+
     /* 占空比上限限制：大于95强制设为95 */
+    if (*pwm_duty > 95)
+    {
+        *pwm_duty = 95;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief 解析二进制 HEX 帧：AA a b c d 55
+ */
+static int parse_binary_motor_push(const uint8_t *frame,
+                                    uint32_t *direction_time_ms,
+                                    uint32_t *wait_time_ms,
+                                    uint32_t *pwm_duty,
+                                    uint32_t *acceleration)
+{
+    if (frame[0] != BINARY_PUSH_FRAME_HEAD || frame[5] != BINARY_PUSH_FRAME_TAIL)
+        return -1;
+
+    uint32_t direction_time_input = frame[1];
+    uint32_t wait_time_input = frame[2];
+    *pwm_duty = frame[3];
+    *acceleration = frame[4];
+
+    if (direction_time_input < 1 || direction_time_input > 99)
+        return -1;
+    if (wait_time_input > 99)
+        return -1;
+    if (*pwm_duty < 5 || *pwm_duty > 100)
+        return -1;
+    if (*acceleration > 50)
+        return -1;
+
+    *direction_time_ms = direction_time_input * 100U;
+    *wait_time_ms = wait_time_input * 100U;
+
     if (*pwm_duty > 95)
     {
         *pwm_duty = 95;
@@ -267,6 +315,49 @@ static int process_input_line(uint8_t data)
     return 0;
 }
 
+/**
+ * @brief 处理二进制 HEX 帧输入
+ * @return 1: 成功解析一帧, 0: 未完成/未命中/无效帧
+ */
+static int process_binary_push_frame(uint8_t data,
+                                      uint32_t *direction_time_ms,
+                                      uint32_t *wait_time_ms,
+                                      uint32_t *pwm_duty,
+                                      uint32_t *acceleration)
+{
+    if (binary_push_frame_len == 0)
+    {
+        if (data != BINARY_PUSH_FRAME_HEAD)
+        {
+            return 0;
+        }
+
+        binary_push_frame[binary_push_frame_len++] = data;
+        cmd_len = 0;
+        memset(cmd_buf, 0, sizeof(cmd_buf));
+        return 0;
+    }
+
+    binary_push_frame[binary_push_frame_len++] = data;
+
+    if (binary_push_frame_len < BINARY_PUSH_FRAME_SIZE)
+    {
+        return 0;
+    }
+
+    binary_push_frame_len = 0;
+    if (parse_binary_motor_push(binary_push_frame,
+                                direction_time_ms,
+                                wait_time_ms,
+                                pwm_duty,
+                                acceleration) != 0)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
 // ==========================================================
 //  CLI 初始化和主循环
 // ==========================================================
@@ -286,6 +377,8 @@ void cli_init(UART_HandleTypeDef *huart)
     // 清空命令缓冲区
     cmd_len = 0;
     memset(cmd_buf, 0, sizeof(cmd_buf));
+    binary_push_frame_len = 0;
+    memset(binary_push_frame, 0, sizeof(binary_push_frame));
 
     /* 启动 RX DMA（CIRCULAR 模式） */
     HAL_UART_Receive_DMA(huart, rx_dma_buffer, RX_DMA_BUF_SIZE);
@@ -302,13 +395,26 @@ void cli_process(void)
     uint8_t data;
     while (rx_buf_read(&data))
     {
+        uint32_t direction_time_ms = 0;
+        uint32_t wait_time_ms = 0;
+        uint32_t pwm_duty = 0;
+        uint32_t acceleration = 0;
+        uint8_t binary_frame_active = (binary_push_frame_len != 0U || data == BINARY_PUSH_FRAME_HEAD);
+
+        if (process_binary_push_frame(data, &direction_time_ms, &wait_time_ms, &pwm_duty, &acceleration))
+        {
+            cli_execute_command(CLI_CMD_DEVICE_MOTOR_PUSH,
+                                direction_time_ms, wait_time_ms, pwm_duty, acceleration);
+            break;
+        }
+
+        if (binary_frame_active || binary_push_frame_len != 0)
+        {
+            continue;
+        }
+
         if (process_input_line(data))
         {
-            uint32_t direction_time_ms = 0;
-            uint32_t wait_time_ms = 0;
-            uint32_t pwm_duty = 0;
-            uint32_t acceleration = 0;
-
             char cmd_str[RX_BUF_SIZE];
             strncpy(cmd_str, (char *)cmd_buf, sizeof(cmd_str) - 1);
             cmd_str[sizeof(cmd_str) - 1] = '\0';
