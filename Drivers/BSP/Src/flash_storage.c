@@ -3,6 +3,7 @@
 // 默认参数值
 #define DEFAULT_DIRECTION_TIME_MS 250 // 默认运行时间，单位：毫秒
 #define DEFAULT_PWM_DUTY 50           // 默认PWM占空比，100最大
+#define DEFAULT_ACCELERATION 0        // 默认加速步距，0=无加速
 
 /**
  * @brief 计算校验和
@@ -11,7 +12,14 @@
  */
 static uint32_t CalculateChecksum(FlashStorage_t *data)
 {
-    return data->direction_time_ms + data->pwm_duty + data->wait_time_ms + data->max_speed_rpm + data->motor_mp_a_dir + data->motor_mp_b_dir;
+    return data->direction_time_ms + data->pwm_duty + data->wait_time_ms + data->max_speed_rpm +
+           data->motor_mp_a_dir + data->motor_mp_b_dir + data->acceleration;
+}
+
+static uint32_t CalculateLegacyChecksum(FlashStorage_t *data)
+{
+    return data->direction_time_ms + data->pwm_duty + data->wait_time_ms + data->max_speed_rpm +
+           data->motor_mp_a_dir + data->motor_mp_b_dir;
 }
 
 /**
@@ -39,6 +47,7 @@ uint32_t FlashStorage_Init(void)
     storage.max_speed_rpm = 3655; // 默认最高转速，单位：RPM
     storage.motor_mp_a_dir = 1;   // 默认值
     storage.motor_mp_b_dir = 0;   // 默认值
+    storage.acceleration = DEFAULT_ACCELERATION;
     storage.checksum = CalculateChecksum(&storage);
 
     FlashStorage_Write(&storage);
@@ -60,7 +69,8 @@ uint32_t FlashStorage_Read(FlashStorage_t *data)
     data->max_speed_rpm = *(__IO uint32_t *)(FLASH_STORAGE_ADDR + 12);
     data->motor_mp_a_dir = *(__IO uint32_t *)(FLASH_STORAGE_ADDR + 16);
     data->motor_mp_b_dir = *(__IO uint32_t *)(FLASH_STORAGE_ADDR + 20);
-    data->checksum = *(__IO uint32_t *)(FLASH_STORAGE_ADDR + 24);
+    data->acceleration = *(__IO uint32_t *)(FLASH_STORAGE_ADDR + 24);
+    data->checksum = *(__IO uint32_t *)(FLASH_STORAGE_ADDR + 28);
 
     return HAL_OK;
 }
@@ -137,7 +147,14 @@ uint32_t FlashStorage_Write(FlashStorage_t *data)
         return status;
     }
 
-    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_STORAGE_ADDR + 24, data->checksum);
+    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_STORAGE_ADDR + 24, data->acceleration);
+    if (status != HAL_OK)
+    {
+        HAL_FLASH_Lock();
+        return status;
+    }
+
+    status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_STORAGE_ADDR + 28, data->checksum);
 
     // 锁定 Flash
     HAL_FLASH_Lock();
@@ -180,7 +197,8 @@ uint32_t FlashStorage_IsValid(FlashStorage_t *data)
     // 检查参数范围
     if (data->direction_time_ms == 0xFFFFFFFF || data->pwm_duty == 0xFFFFFFFF ||
         data->wait_time_ms == 0xFFFFFFFF || data->max_speed_rpm == 0xFFFFFFFF ||
-        data->motor_mp_a_dir == 0xFFFFFFFF || data->motor_mp_b_dir == 0xFFFFFFFF)
+        data->motor_mp_a_dir == 0xFFFFFFFF || data->motor_mp_b_dir == 0xFFFFFFFF ||
+        data->acceleration == 0xFFFFFFFF)
     {
         return 0; // Flash 未写入数据
     }
@@ -213,6 +231,18 @@ uint32_t FlashStorage_IsValid(FlashStorage_t *data)
     if (data->motor_mp_b_dir != 0 && data->motor_mp_b_dir != 1)
     {
         return 0; // 电机B方向超出范围
+    }
+
+    if (data->checksum == 0xFFFFFFFF && data->acceleration == CalculateLegacyChecksum(data))
+    {
+        data->acceleration = DEFAULT_ACCELERATION;
+        data->checksum = CalculateChecksum(data);
+        return 1; // 兼容旧格式：旧格式未保存加速步距
+    }
+
+    if (data->acceleration > 50)
+    {
+        return 0; // 加速步距超出范围
     }
 
     // 检查校验和

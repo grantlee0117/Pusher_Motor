@@ -28,6 +28,7 @@
 #define DEFAULT_MAX_SPEED_RPM 3655    // 默认最高转速，单位：RPM
 #define DEFAULT_MOTOR_MP_A_DIR 1      // 默认电机A方向（低电平）
 #define DEFAULT_MOTOR_MP_B_DIR 0      // 默认电机B方向（高电平）
+#define DEFAULT_ACCELERATION 0        // 默认加速步距，0=无加速
 
 // 静态参数结构体
 static MotorParams_t motor_params = {
@@ -37,7 +38,8 @@ static MotorParams_t motor_params = {
     .wait_time_ms = DEFAULT_WAIT_TIME_MS,
     .max_speed_rpm = DEFAULT_MAX_SPEED_RPM,
     .motor_mp_a_dir = DEFAULT_MOTOR_MP_A_DIR,
-    .motor_mp_b_dir = DEFAULT_MOTOR_MP_B_DIR};
+    .motor_mp_b_dir = DEFAULT_MOTOR_MP_B_DIR,
+    .acceleration = DEFAULT_ACCELERATION};
 
 /**
  * @brief 初始化参数管理器
@@ -211,6 +213,31 @@ uint32_t params_manager_get_motor_mp_b_dir(void)
 }
 
 /**
+ * @brief 设置加速步距
+ * @param acceleration 加速步距（0-50）
+ * @return 0: 成功, 1: 参数无效
+ */
+uint32_t params_manager_set_acceleration(uint32_t acceleration)
+{
+    if (acceleration > 50)
+    {
+        return 1; // 参数无效
+    }
+
+    motor_params.acceleration = acceleration;
+    return 0;
+}
+
+/**
+ * @brief 获取加速步距
+ * @return 加速步距（0-50）
+ */
+uint32_t params_manager_get_acceleration(void)
+{
+    return motor_params.acceleration;
+}
+
+/**
  * @brief 保存参数到Flash
  * @return 0: 成功, 其他: 失败
  */
@@ -224,6 +251,7 @@ uint32_t params_manager_save(void)
     storage.max_speed_rpm = motor_params.max_speed_rpm;
     storage.motor_mp_a_dir = motor_params.motor_mp_a_dir;
     storage.motor_mp_b_dir = motor_params.motor_mp_b_dir;
+    storage.acceleration = motor_params.acceleration;
 
     return FlashStorage_Write(&storage);
 }
@@ -246,6 +274,7 @@ uint32_t params_manager_load(void)
         motor_params.max_speed_rpm = storage.max_speed_rpm;
         motor_params.motor_mp_a_dir = storage.motor_mp_a_dir;
         motor_params.motor_mp_b_dir = storage.motor_mp_b_dir;
+        motor_params.acceleration = storage.acceleration;
 
         return 0; // 成功
     }
@@ -258,6 +287,7 @@ uint32_t params_manager_load(void)
         storage.max_speed_rpm = motor_params.max_speed_rpm;
         storage.motor_mp_a_dir = motor_params.motor_mp_a_dir;
         storage.motor_mp_b_dir = motor_params.motor_mp_b_dir;
+        storage.acceleration = motor_params.acceleration;
 
         FlashStorage_Write(&storage);
 

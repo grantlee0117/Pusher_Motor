@@ -271,6 +271,8 @@ static void cli_execute_command(CliCommand_t cmd,
         pusher_motor_set_acceleration((uint8_t)acceleration);
         /* 设置参数并启动电机 */
         pusher_motor_set_params_and_start(direction_time_ms, wait_time_ms, pwm_duty);
+        /* 保存 a/b/c/d 到 Flash，掉电后保留运行时间、等待时间、速度和加速步距 */
+        (void)pusher_motor_save_params();
         break;
 
     case CLI_CMD_UNKNOWN:

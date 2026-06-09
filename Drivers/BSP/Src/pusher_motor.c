@@ -34,6 +34,7 @@ void pusher_motor_init(void)
 {
     // 初始化参数管理器
     params_manager_init();
+    acc_speed_value = (uint8_t)params_manager_get_acceleration();
 
     // 启动软件 PWM（TIM1 中断）
     soft_pwm_init();
@@ -480,10 +481,11 @@ uint32_t pusher_motor_get_motor_mp_b_dir(void)
  */
 uint32_t pusher_motor_set_acceleration(uint8_t accel)
 {
-    if (accel > 50)
+    if (params_manager_set_acceleration(accel) != 0)
     {
         return 1; // 参数无效
     }
+
     acc_speed_value = accel;
     return 0;
 }

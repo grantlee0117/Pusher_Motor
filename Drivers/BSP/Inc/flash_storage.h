@@ -14,6 +14,7 @@ typedef struct {
     uint32_t max_speed_rpm;       // 最高转速（RPM）
     uint32_t motor_mp_a_dir;     // 电机A方向引脚状态
     uint32_t motor_mp_b_dir;     // 电机B方向引脚状态
+    uint32_t acceleration;        // 加速步距
     uint32_t checksum;           // 校验和
 } FlashStorage_t;
 

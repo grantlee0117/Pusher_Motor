@@ -33,6 +33,7 @@ typedef struct {
     uint32_t max_speed_rpm;       // 最高转速（RPM）
     uint32_t motor_mp_a_dir;      // 电机A方向
     uint32_t motor_mp_b_dir;      // 电机B方向
+    uint32_t acceleration;        // 加速步距（0-50）
 } MotorParams_t;
 
 /**
@@ -124,6 +125,19 @@ uint32_t params_manager_set_motor_mp_b_dir(uint32_t dir);
  * @return 方向（0或1）
  */
 uint32_t params_manager_get_motor_mp_b_dir(void);
+
+/**
+ * @brief 设置加速步距
+ * @param acceleration 加速步距（0-50）
+ * @return 0: 成功, 1: 参数无效
+ */
+uint32_t params_manager_set_acceleration(uint32_t acceleration);
+
+/**
+ * @brief 获取加速步距
+ * @return 加速步距（0-50）
+ */
+uint32_t params_manager_get_acceleration(void);
 
 /**
  * @brief 保存参数到Flash
